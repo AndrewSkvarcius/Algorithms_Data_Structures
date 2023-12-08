@@ -1,5 +1,3 @@
-/** BinaryTreeNode: node for a general tree. */
-
 class BinaryTreeNode {
   constructor(val, left = null, right = null) {
     this.val = val;
@@ -13,63 +11,119 @@ class BinaryTree {
     this.root = root;
   }
 
-  /** minDepth(): return the minimum depth of the tree -- that is,
-   * the length of the shortest path from the root to a leaf. */
-
   minDepth() {
+    if (!this.root) return 0;
+    
+    function depth(node) {
+      if (!node) return Infinity;
+      if (!node.left && !node.right) return 1;
+      return Math.min(depth(node.left), depth(node.right)) + 1;
+    }
 
+    return depth(this.root);
   }
-
-  /** maxDepth(): return the maximum depth of the tree -- that is,
-   * the length of the longest path from the root to a leaf. */
 
   maxDepth() {
+    function depth(node) {
+      if (!node) return 0;
+      return Math.max(depth(node.left), depth(node.right)) + 1;
+    }
 
+    return depth(this.root);
   }
-
-  /** maxSum(): return the maximum sum you can obtain by traveling along a path in the tree.
-   * The path doesn't need to start at the root, but you can't visit a node more than once. */
 
   maxSum() {
+    if (!this.root) return 0;  // Return 0 if the tree is empty
 
+    let maxSum = -Infinity;
+  
+    function findMaxSum(node) {
+      if (!node) return 0;
+      let left = Math.max(0, findMaxSum(node.left));
+      let right = Math.max(0, findMaxSum(node.right));
+      maxSum = Math.max(maxSum, node.val + left + right);
+      return node.val + Math.max(left, right);
+    }
+  
+    findMaxSum(this.root);
+    return maxSum;
   }
-
-  /** nextLarger(lowerBound): return the smallest value in the tree
-   * which is larger than lowerBound. Return null if no such value exists. */
 
   nextLarger(lowerBound) {
+    let result = null;
 
+    function traverse(node) {
+      if (!node) return;
+      if (node.val > lowerBound && (result === null || node.val < result)) {
+        result = node.val;
+      }
+      traverse(node.left);
+      traverse(node.right);
+    }
+
+    traverse(this.root);
+    return result;
   }
-
-  /** Further study!
-   * areCousins(node1, node2): determine whether two nodes are cousins
-   * (i.e. are at the same level but have different parents. ) */
 
   areCousins(node1, node2) {
+    if (!node1 || !node2 || node1 === node2) return false;
 
+    function findDepthAndParent(node, target, depth = 0, parent = null) {
+      if (!node) return null;
+      if (node === target) return { depth, parent };
+
+      let left = findDepthAndParent(node.left, target, depth + 1, node);
+      let right = findDepthAndParent(node.right, target, depth + 1, node);
+
+      return left || right;
+    }
+
+    let node1Info = findDepthAndParent(this.root, node1);
+    let node2Info = findDepthAndParent(this.root, node2);
+
+    return node1Info && node2Info && 
+           node1Info.depth === node2Info.depth && 
+           node1Info.parent !== node2Info.parent;
   }
 
-  /** Further study!
-   * serialize(tree): serialize the BinaryTree object tree into a string. */
+  static serialize(tree) {
+    function serializeHelper(node) {
+      if (!node) return "null";
+      return `${node.val},${serializeHelper(node.left)},${serializeHelper(node.right)}`;
+    }
 
-  static serialize() {
-
+    return serializeHelper(tree.root);
   }
 
-  /** Further study!
-   * deserialize(stringTree): deserialize stringTree into a BinaryTree object. */
+  static deserialize(str) {
+    let arr = str.split(',');
 
-  static deserialize() {
+    function deserializeHelper() {
+      let val = arr.shift();
+      if (val === "null") return null;
+      let newNode = new BinaryTreeNode(parseInt(val));
+      newNode.left = deserializeHelper();
+      newNode.right = deserializeHelper();
+      return newNode;
+    }
 
+    return new BinaryTree(deserializeHelper());
   }
-
-  /** Further study!
-   * lowestCommonAncestor(node1, node2): find the lowest common ancestor
-   * of two nodes in a binary tree. */
 
   lowestCommonAncestor(node1, node2) {
-    
+    function findLCA(node) {
+      if (!node || node === node1 || node === node2) return node;
+
+      let left = findLCA(node.left);
+      let right = findLCA(node.right);
+
+      if (left && right) return node;
+      return left || right;
+    }
+
+    return findLCA(this.root);
   }
 }
 
 module.exports = { BinaryTree, BinaryTreeNode };
+
